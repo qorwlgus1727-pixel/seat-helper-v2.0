@@ -44,7 +44,7 @@
             cursor: pointer;
         }
         .seat-full { border-color: var(--t-400); background-color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .desk.over { border: 2px dashed var(--t-500); transform: scale(1.05); z-index: 10; }
+        .desk.over { border: 2px dashed var(--t-500) !important; transform: scale(1.05); z-index: 10; }
         .seat-fixed { border: 2.5px solid var(--t-500) !important; background-color: var(--t-50) !important; }
 
         #seatGrid { display: grid; gap: 16px; justify-content: center; } 
@@ -99,7 +99,7 @@
 
             <div class="flex gap-2 relative">
                 <input type="file" id="batchFileInput" class="hidden" multiple>
-                <button onclick="document.getElementById('batchFileInput').click()" class="bg-white theme-text border theme-border px-4 py-2 rounded-lg hover:theme-bg-light font-bold text-sm transition-all">📁 명단 업로드</button>
+                <button onclick="document.getElementById('batchFileInput').click()" class="bg-white theme-text border theme-border px-4 py-2 rounded-lg hover:theme-bg-light font-bold text-sm">📁 명단 업로드</button>
                 <button onclick="arrangeSeats()" class="theme-bg text-white px-6 py-2 rounded-lg hover:opacity-90 shadow-md font-bold text-sm transition-all">✨ 랜덤 배치</button>
                 
                 <div class="relative group">
@@ -172,7 +172,7 @@
                         </div>
                     </div>
 
-                    <button onclick="syncPatternToAll()" class="w-full mb-6 theme-bg-light theme-text border theme-border-light py-2 rounded-lg text-[11px] font-bold hover:bg-white transition-all">🔗 배치 패턴 모든 반 복사</button>
+                    <button onclick="syncPatternToAll()" class="w-full mb-6 theme-bg-light theme-text border theme-border-light py-2 rounded-lg text-[11px] font-bold hover:bg-white transition-all text-center">🔗 배치 패턴 모든 반 복사</button>
 
                     <div class="border-t pt-4">
                         <div class="flex justify-between items-center mb-3">
@@ -188,7 +188,7 @@
                 <div class="scroll-container card">
                     <div id="printArea" class="relative">
                         <div class="no-print absolute top-2 left-4 text-[10px] text-gray-400" data-html2canvas-ignore="true">
-                            [드래그로 학생/모둠 배치 | 책상 클릭 시 고정📌 | 흰색 배경을 드래그하여 가로로 볼 수 있어요]
+                            [드래그로 학생/모둠 배치 | 책상 클릭 시 고정📌 | 거울 모드 지원]
                         </div>
                         <div id="platformTop" class="platform">교탁 (칠판)</div>
                         <div id="seatGrid"></div>
@@ -262,11 +262,14 @@
     </div>
 
     <script>
+        // --- 데이터 상태 ---
         let classes = JSON.parse(localStorage.getItem('seatPro_vFinal_data')) || [{ id: Date.now(), name: '1반', students: [], arrangement: [], savedPairs: [], avoidPairs: "", groupOrder: [] }];
         let currentClassId = classes[0].id;
         let config = JSON.parse(localStorage.getItem('seatPro_vFinal_config')) || { view: 'student', cols: 6, mode: 'exam', theme: 'pink', noSize: 10, nameSize: 14, groupSize: 4, groupCols: 3, hideSecretMenus: false };
-        let dragSource = null;
-        let dragSourceType = 'desk'; 
+        
+        // 드래그 전역 변수
+        let dragSourceObj = null;
+        let dragSourceType = 'desk'; // 'desk', 'list', 'group'
         let draggedStudentIdx = null;
         let draggedGroupIdx = null;
 
@@ -281,71 +284,14 @@
 
         window.onload = () => { initTheme(); renderTabs(); loadClassData(); initFileUpload(); };
 
+        // --- 유틸리티 함수 ---
+        function getCurrentClass() { return classes.find(c => c.id === currentClassId); }
+        function saveData() { localStorage.setItem('seatPro_vFinal_data', JSON.stringify(classes)); localStorage.setItem('seatPro_vFinal_config', JSON.stringify(config)); }
         function updateAvoidPairs(val) { const cls = getCurrentClass(); cls.avoidPairs = val; saveData(); }
         function getAvoidPairsList() { const val = getCurrentClass().avoidPairs || ""; return val.split(',').map(p => { const n = p.split('-').map(x => x.trim()); return n.length === 2 ? n.sort((a,b)=>a-b).join('-') : null; }).filter(x => x); }
         function updateGroupCols(val) { config.groupCols = parseInt(val) || 3; saveData(); renderDesks(getCurrentClass().arrangement); }
 
-        function saveToCSV() {
-            const cls = getCurrentClass(); if (!cls.arrangement.length) return alert('저장할 데이터가 없습니다.');
-            let csv = "\uFEFF좌석번호,학생번호,이름,고정여부\n";
-            cls.arrangement.forEach((s, i) => { if (s) csv += `${i + 1},${s.no},${s.name},${s.isFixed ? 'Y' : 'N'}\n`; else csv += `${i + 1},,,N\n`; });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${cls.name}_배치.csv`; link.click();
-        }
-
-        function loadFromCSV(input) {
-            const file = input.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const rows = e.target.result.split("\n").slice(1);
-                const newArr = rows.map(r => { const c = r.split(","); return (c.length >= 3 && c[1]) ? { no: c[1], name: c[2], isFixed: c[3]?.trim() === 'Y' } : null; }).filter(x => x !== undefined);
-                const cls = getCurrentClass(); cls.arrangement = newArr; saveData(); renderDesks(cls.arrangement); loadClassData(); alert('불러오기 완료!');
-            };
-            reader.readAsText(file); input.value = '';
-        }
-
-        function saveCurrentPairs() {
-            const cls = getCurrentClass(); if (config.mode === 'exam') return alert('시험 대형에서는 사용할 수 없습니다.');
-            const pairs = []; const arr = cls.arrangement;
-            const step = config.mode === 'pair' ? 2 : config.groupSize;
-            for (let i = 0; i < arr.length; i += step) {
-                const group = arr.slice(i, i + step).filter(s => s);
-                for(let a=0; a<group.length; a++) { for(let b=a+1; b<group.length; b++) { pairs.push([group[a].no, group[b].no].sort((x,y)=>x-y).join('-')); } }
-            }
-            cls.savedPairs = [...new Set(pairs)]; saveData(); alert('현재 정보를 기억했습니다.');
-        }
-
-        function initTheme() {
-            updateThemeVars(config.theme); updateFontSize('no', config.noSize); updateFontSize('name', config.nameSize);
-            document.getElementById('themeSelect').value = config.theme;
-            document.getElementById('colCount').value = config.cols;
-            document.getElementById('layoutMode').value = config.mode;
-            document.getElementById('groupSizeInput').value = config.groupSize || 4;
-            document.getElementById('groupColInput').value = config.groupCols || 3;
-            document.getElementById('hideSecretMenusToggle').checked = config.hideSecretMenus;
-            toggleGroupSizeInput(config.mode);
-            applySecretMenusVisibility();
-        }
-
-        function applySecretMenusVisibility() { document.getElementById('secretMenusGroup').style.display = config.hideSecretMenus ? 'none' : 'block'; }
-
-        function updateThemeVars(theme) {
-            const colors = colorThemes[theme]; const root = document.documentElement;
-            Object.keys(colors).forEach(k => root.style.setProperty(`--t-${k}`, colors[k]));
-            config.theme = theme;
-        }
-
-        function updateFontSize(type, val) {
-            document.documentElement.style.setProperty(`--desk-${type}-size`, val + 'px');
-            document.getElementById(`${type}SizeVal`).innerText = val + 'px';
-            if (type === 'no') config.noSize = val; if (type === 'name') config.nameSize = val;
-        }
-
-        function toggleGroupSizeInput(mode) {
-            document.getElementById('groupSizeDiv').classList.toggle('hidden', mode !== 'group');
-            document.getElementById('groupAdjustmentMenu').classList.toggle('hidden', mode !== 'group');
-        }
-
+        // --- 명단 및 파일 처리 ---
         function initFileUpload() {
             const dz = document.getElementById('dropZone');
             dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drop-active'); });
@@ -386,13 +332,14 @@
                 const li = document.createElement('li');
                 li.className = `flex items-center gap-2 group p-1 rounded-lg student-item ${isSeated ? 'student-seated' : 'hover:bg-gray-50'}`;
                 li.draggable = true;
-                li.ondragstart = (e) => { dragSourceType = 'list'; draggedStudentIdx = i; e.dataTransfer.setData('text/plain', i); };
+                li.onmousedown = () => { dragSourceType = 'list'; draggedStudentIdx = i; };
                 li.innerHTML = `<input type="text" value="${s.no}" onchange="updateStudentData(${i}, 'no', this.value)" class="edit-input w-8 text-center text-[10px] text-gray-400 font-bold"><input type="text" value="${s.name}" onchange="updateStudentData(${i}, 'name', this.value)" class="edit-input flex-1 font-medium text-sm"><button onclick="removeStudent(${i})" class="hidden group-hover:block text-red-300 hover:text-red-500 text-sm px-1">×</button>`;
                 listEl.appendChild(li);
             });
             renderDesks(cls.arrangement);
         }
 
+        // --- 핵심 렌더링 로직 ---
         function renderDesks(arrangement = []) {
             const grid = document.getElementById('seatGrid');
             const showDeskNum = document.getElementById('showNumberToggle').checked;
@@ -403,6 +350,7 @@
             const isTeacher = config.view === 'teacher';
             document.getElementById('platformTop').classList.toggle('hidden', isTeacher);
             document.getElementById('platformBottom').classList.toggle('hidden', !isTeacher);
+
             if (config.mode === 'group') renderGroupDesks(arrangement, showDeskNum, showStudentNum, checkPairDup, isTeacher, groupMoveMode);
             else renderNormalDesks(arrangement, showDeskNum, showStudentNum, checkPairDup, isTeacher);
         }
@@ -435,7 +383,11 @@
                 groupBlock.className = `group-block ${groupMoveMode ? 'cursor-move' : ''}`;
                 groupBlock.draggable = groupMoveMode;
                 groupBlock.dataset.groupIdx = groupIdx;
-                if (groupMoveMode) { groupBlock.addEventListener('dragstart', handleGroupDragStart); groupBlock.addEventListener('dragover', (e) => e.preventDefault()); groupBlock.addEventListener('drop', handleGroupDrop); }
+                if (groupMoveMode) { 
+                    groupBlock.addEventListener('dragstart', (e) => { dragSourceType = 'group'; draggedGroupIdx = groupIdx; groupBlock.classList.add('group-moving'); });
+                    groupBlock.addEventListener('dragover', (e) => e.preventDefault());
+                    groupBlock.addEventListener('drop', handleGroupDrop); 
+                }
                 const label = document.createElement('div'); label.className = 'group-label'; label.innerText = `${groupIdx + 1}모둠`; groupBlock.appendChild(label);
                 const desksDiv = document.createElement('div'); desksDiv.className = 'group-desks';
                 desksDiv.style.gridTemplateColumns = groupSize > 3 ? `repeat(2, auto)` : `repeat(${groupSize}, auto)`;
@@ -448,47 +400,50 @@
             });
         }
 
-        function handleGroupDragStart(e) { dragSourceType = 'group'; draggedGroupIdx = parseInt(this.dataset.groupIdx); this.classList.add('group-moving'); e.dataTransfer.effectAllowed = 'move'; }
-        function handleGroupDrop(e) { e.preventDefault(); if (dragSourceType !== 'group') return; this.classList.remove('group-moving'); const targetGroupIdx = parseInt(this.dataset.groupIdx); const cls = getCurrentClass(); if (draggedGroupIdx !== targetGroupIdx) { const oldIdx = cls.groupOrder.indexOf(draggedGroupIdx); const newIdx = cls.groupOrder.indexOf(targetGroupIdx); [cls.groupOrder[oldIdx], cls.groupOrder[newIdx]] = [cls.groupOrder[newIdx], cls.groupOrder[oldIdx]]; saveData(); renderDesks(cls.arrangement); } }
-
+        // --- 드래그 앤 드롭 핸들러 ---
         function createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, visualIdx) {
             const desk = document.createElement('div');
             const cls = getCurrentClass();
             const student = arrangement[dataIdx];
             const groupMoveMode = document.getElementById('groupMoveModeToggle')?.checked;
+            
             desk.className = `desk ${student ? 'seat-full' : ''} ${student && student.isFixed ? 'seat-fixed' : ''}`;
+            desk.dataset.index = dataIdx;
             
             if (!groupMoveMode) {
-                desk.draggable = true; desk.onclick = () => toggleFixSeat(dataIdx);
-                desk.addEventListener('dragstart', (e) => { dragSource = desk; dragSourceType = 'desk'; e.dataTransfer.effectAllowed = 'move'; desk.style.opacity = '0.3'; });
-                desk.addEventListener('dragover', (e) => { e.preventDefault(); desk.classList.add('over'); });
+                desk.draggable = true; 
+                desk.onclick = () => toggleFixSeat(dataIdx);
+                desk.addEventListener('dragstart', (e) => { 
+                    dragSourceObj = desk; 
+                    dragSourceType = 'desk'; 
+                    e.dataTransfer.effectAllowed = 'move'; 
+                    desk.style.opacity = '0.3'; 
+                });
+                desk.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    desk.classList.add('over');
+                });
                 desk.addEventListener('dragleave', () => desk.classList.remove('over'));
                 desk.addEventListener('drop', handleDrop);
-            } else { desk.draggable = false; }
+            }
 
-            // 중복 짝꿍 체크 로직 수정: dataIdx 기준이 아닌 '논리적 그룹' 기준으로 판별
+            // 중복 짝꿍 체크 (데이터 인덱스 기준)
             if (checkPairDup && student && cls.savedPairs) {
                 const step = config.mode === 'pair' ? 2 : config.groupSize;
-                // dataIdx가 해당 배열에서 몇 번째 그룹에 속하는지 계산
                 const logicalGroupStart = Math.floor(dataIdx / step) * step;
                 const logicalGroupEnd = logicalGroupStart + step;
-                
                 for(let k = logicalGroupStart; k < logicalGroupEnd; k++) {
                     if (k === dataIdx) continue;
                     const partner = arrangement[k];
                     if (partner && cls.savedPairs.includes([student.no, partner.no].sort((a,b)=>a-b).join('-'))) {
-                        const badge = document.createElement('span'); 
-                        badge.className = 'pair-alert'; 
-                        badge.innerText = '🙌'; 
-                        desk.appendChild(badge); 
-                        break;
+                        const badge = document.createElement('span'); badge.className = 'pair-alert'; badge.innerText = '🙌'; desk.appendChild(badge); break;
                     }
                 }
             }
-            
+
             let deskNoHtml = showDeskNum ? `<span class="absolute top-1 left-1.5 text-[9px] text-gray-300 font-normal">${dataIdx + 1}</span>` : '';
             if (student) {
-                let sNoHtml = showStudentNum ? `<span style="font-size: var(--desk-no-size)" class="theme-text opacity-70 leading-none mb-1">${student.no}</span>` : '';
+                let sNoHtml = showStudentNum ? `<span style="font-size: var(--desk-no-size)" class="theme-text opacity-70 leading-none mb-1 text-center">${student.no}</span>` : '';
                 let fixIcon = student.isFixed ? `<span class="absolute top-1 right-1 text-[10px]">📌</span>` : '';
                 desk.innerHTML += `${deskNoHtml}${fixIcon}<div class="flex flex-col items-center justify-center">${sNoHtml}<span style="font-size: var(--desk-name-size)" class="font-bold leading-tight text-center px-1">${student.name}</span></div>`;
             } else { desk.innerHTML += deskNoHtml; }
@@ -496,30 +451,63 @@
         }
 
         function handleDrop(e) {
-            e.preventDefault(); this.classList.remove('over'); const cls = getCurrentClass(); const destIdx = parseInt(this.dataset.index);
+            e.preventDefault();
+            this.classList.remove('over');
+            const cls = getCurrentClass();
+            const destIdx = parseInt(this.dataset.index);
+
             if (dragSourceType === 'desk') {
-                dragSource.style.opacity = '1';
-                if (dragSource !== this) { const sIdx = parseInt(dragSource.dataset.index); [cls.arrangement[sIdx], cls.arrangement[destIdx]] = [cls.arrangement[destIdx], cls.arrangement[sIdx]]; }
+                if (dragSourceObj) {
+                    dragSourceObj.style.opacity = '1';
+                    const srcIdx = parseInt(dragSourceObj.dataset.index);
+                    if (srcIdx !== destIdx) {
+                        [cls.arrangement[srcIdx], cls.arrangement[destIdx]] = [cls.arrangement[destIdx], cls.arrangement[srcIdx]];
+                    }
+                }
             } else if (dragSourceType === 'list') {
                 const studentToPlace = cls.students[draggedStudentIdx];
+                // 기존 위치 찾아서 비우기
                 const existingIdx = cls.arrangement.findIndex(s => s && s.no === studentToPlace.no);
                 if (existingIdx !== -1) cls.arrangement[existingIdx] = null;
+                // 새 위치에 배치
                 cls.arrangement[destIdx] = { ...studentToPlace, isFixed: false };
             }
-            saveData(); loadClassData();
+            
+            saveData();
+            loadClassData();
         }
 
-        function getCurrentClass() { return classes.find(c => c.id === currentClassId); }
-        function saveData() { localStorage.setItem('seatPro_vFinal_data', JSON.stringify(classes)); localStorage.setItem('seatPro_vFinal_config', JSON.stringify(config)); }
-        function renderTabs() {
-            const container = document.getElementById('classTabs'); container.innerHTML = '';
-            classes.forEach(cls => {
-                const btn = document.createElement('button');
-                btn.className = `px-4 py-1 rounded-lg text-sm font-bold border transition-all ${cls.id === currentClassId ? 'tab-active shadow-md' : 'bg-white text-gray-400'}`;
-                btn.innerText = cls.name; btn.onclick = () => { currentClassId = cls.id; renderTabs(); loadClassData(); };
-                container.appendChild(btn);
-            });
+        function handleGroupDrop(e) {
+            e.preventDefault();
+            if (dragSourceType !== 'group') return;
+            this.classList.remove('group-moving');
+            const targetGroupIdx = parseInt(this.dataset.groupIdx);
+            const cls = getCurrentClass();
+            if (draggedGroupIdx !== targetGroupIdx) {
+                const oldIdx = cls.groupOrder.indexOf(draggedGroupIdx);
+                const newIdx = cls.groupOrder.indexOf(targetGroupIdx);
+                [cls.groupOrder[oldIdx], cls.groupOrder[newIdx]] = [cls.groupOrder[newIdx], cls.groupOrder[oldIdx]];
+                saveData(); renderDesks(cls.arrangement);
+            }
         }
+
+        // --- 기타 기능 및 초기화 ---
+        function initTheme() {
+            updateThemeVars(config.theme); updateFontSize('no', config.noSize); updateFontSize('name', config.nameSize);
+            document.getElementById('themeSelect').value = config.theme;
+            document.getElementById('colCount').value = config.cols;
+            document.getElementById('layoutMode').value = config.mode;
+            document.getElementById('groupSizeInput').value = config.groupSize || 4;
+            document.getElementById('groupColInput').value = config.groupCols || 3;
+            document.getElementById('hideSecretMenusToggle').checked = config.hideSecretMenus;
+            toggleGroupSizeInput(config.mode);
+            applySecretMenusVisibility();
+        }
+        function applySecretMenusVisibility() { document.getElementById('secretMenusGroup').style.display = config.hideSecretMenus ? 'none' : 'block'; }
+        function updateThemeVars(theme) { const colors = colorThemes[theme]; const root = document.documentElement; Object.keys(colors).forEach(k => root.style.setProperty(`--t-${k}`, colors[k])); config.theme = theme; }
+        function updateFontSize(type, val) { document.documentElement.style.setProperty(`--desk-${type}-size`, val + 'px'); document.getElementById(`${type}SizeVal`).innerText = val + 'px'; if (type === 'no') config.noSize = val; if (type === 'name') config.nameSize = val; }
+        function toggleGroupSizeInput(mode) { document.getElementById('groupSizeDiv').classList.toggle('hidden', mode !== 'group'); document.getElementById('groupAdjustmentMenu').classList.toggle('hidden', mode !== 'group'); }
+        function renderTabs() { const container = document.getElementById('classTabs'); container.innerHTML = ''; classes.forEach(cls => { const btn = document.createElement('button'); btn.className = `px-4 py-1 rounded-lg text-sm font-bold border transition-all ${cls.id === currentClassId ? 'tab-active shadow-md' : 'bg-white text-gray-400'}`; btn.innerText = cls.name; btn.onclick = () => { currentClassId = cls.id; renderTabs(); loadClassData(); }; container.appendChild(btn); }); }
         function addClass() { const nc = { id: Date.now() + Math.random(), name: (classes.length + 1) + '반', students: [], arrangement: [], savedPairs: [], avoidPairs: "", groupOrder: [] }; classes.push(nc); currentClassId = nc.id; saveData(); renderTabs(); loadClassData(); }
         function deleteClass() { if (classes.length > 1 && confirm('현재 반을 삭제하시겠습니까?')) { classes = classes.filter(c => c.id !== currentClassId); currentClassId = classes[0].id; saveData(); renderTabs(); loadClassData(); } }
         function renameClass(v) { getCurrentClass().name = v; saveData(); renderTabs(); }
@@ -533,7 +521,7 @@
         function closeSettings() { document.getElementById('settingsModal').classList.replace('flex', 'hidden'); }
         function saveSettings() { config.cols = parseInt(document.getElementById('colCount').value) || 6; config.mode = document.getElementById('layoutMode').value; config.groupSize = parseInt(document.getElementById('groupSizeInput').value) || 4; config.hideSecretMenus = document.getElementById('hideSecretMenusToggle').checked; saveData(); renderDesks(getCurrentClass().arrangement); applySecretMenusVisibility(); toggleGroupSizeInput(config.mode); closeSettings(); }
         function renderDesksByCurrent() { renderDesks(getCurrentClass().arrangement); }
-
+        
         function arrangeSeats() {
             const cls = getCurrentClass(); if (!cls.students.length) return alert('명단을 등록하세요.');
             const step = config.mode === 'pair' ? 2 : (config.mode === 'group' ? config.groupSize : 1);
@@ -560,6 +548,7 @@
             }
             cls.arrangement = resultArr; saveData(); loadClassData();
         }
+
         function syncPatternToAll() { const cur = getCurrentClass(); if (!cur.arrangement.length) return alert('배치를 먼저 하세요.'); const pattern = cur.arrangement.map(s => s ? s.no : null); classes.forEach(cls => { if (cls.id !== currentClassId) { cls.arrangement = pattern.map(no => no ? (cls.students.find(s => s.no == no) || null) : null); } }); saveData(); loadClassData(); alert('패턴이 적용되었습니다!'); }
         function setView(v) { config.view = v; document.getElementById('viewBtnStudent').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'student' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; document.getElementById('viewBtnTeacher').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'teacher' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; renderDesks(getCurrentClass().arrangement); }
 
