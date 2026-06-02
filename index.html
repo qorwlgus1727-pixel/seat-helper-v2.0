@@ -164,7 +164,7 @@
                         </div>
 
                         <div class="space-y-2 mb-4 bg-blue-50 p-3 rounded-lg text-xs border border-blue-100">
-                            <p class="font-bold text-blue-600 mb-1">💞 짝꿍 관리 (중복 체크)</p>
+                            <p class="font-bold text-blue-600 mb-1">🙌 짝꿍 관리 (중복 체크)</p>
                             <label class="flex items-center cursor-pointer mb-2">
                                 <input type="checkbox" id="checkPairDupToggle" onchange="renderDesksByCurrent()" class="mr-2 accent-blue-500" checked> 중복 표시
                             </label>
@@ -473,7 +473,7 @@
                     if (k === visualIdx) continue;
                     const partner = cls.arrangement[k];
                     if (partner && cls.savedPairs.includes([student.no, partner.no].sort((a,b)=>a-b).join('-'))) {
-                        const badge = document.createElement('span'); badge.className = 'pair-alert'; badge.innerText = '💞'; desk.appendChild(badge); break;
+                        const badge = document.createElement('span'); badge.className = 'pair-alert'; badge.innerText = '🙌'; desk.appendChild(badge); break;
                     }
                 }
             }
