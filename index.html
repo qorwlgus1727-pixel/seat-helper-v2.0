@@ -52,7 +52,6 @@
         .grid-pair { column-gap: 4px; row-gap: 20px; }
         .desk-pair-gap { margin-right: 36px !important; } 
 
-        /* 모둠 배치 스타일 */
         .group-container { display: grid; gap: 25px; justify-content: center; padding: 10px; }
         .group-block {
             border: 2px solid var(--t-100); padding: 12px; border-radius: 12px;
@@ -144,7 +143,6 @@
                         <label class="flex items-center cursor-pointer"><input type="checkbox" id="showStudentNoToggle" onchange="renderDesksByCurrent()" class="mr-2 accent-pink-500" checked> 학생 개인번호 표시</label>
                     </div>
 
-                    <!-- 모둠 위치 조정 메뉴 (모둠 모드일 때만 표시) -->
                     <div id="groupAdjustmentMenu" class="space-y-2 mb-4 bg-orange-50 p-3 rounded-lg text-xs border border-orange-100 hidden">
                         <p class="font-bold text-orange-600 mb-1">📐 모둠 위치 조정</p>
                         <div class="flex items-center justify-between mb-2">
@@ -190,7 +188,7 @@
                 <div class="scroll-container card">
                     <div id="printArea" class="relative">
                         <div class="no-print absolute top-2 left-4 text-[10px] text-gray-400" data-html2canvas-ignore="true">
-                            [드래그로 학생/모둠 배치 | 책상 클릭 시 고정📌]
+                            [드래그로 학생/모둠 배치 | 책상 클릭 시 고정📌 | 흰색 배경을 드래그하여 가로로 볼 수 있어요]
                         </div>
                         <div id="platformTop" class="platform">교탁 (칠판)</div>
                         <div id="seatGrid"></div>
@@ -257,7 +255,7 @@
                 </div>
             </div>
             <div class="mt-8 flex gap-2">
-                <button onclick="saveSettings()" class="flex-1 theme-bg text-white py-2 rounded-lg font-bold">적용</button>
+                <button onclick="saveSettings()" class="flex-1 theme-bg text-white py-2 rounded-lg font-bold shadow-lg opacity-90">적용</button>
                 <button onclick="closeSettings()" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg">닫기</button>
             </div>
         </div>
@@ -416,7 +414,7 @@
             const totalSeats = Math.ceil(Math.max(arrangement.length, 24) / config.cols) * config.cols;
             for (let i = 0; i < totalSeats; i++) {
                 let dataIdx = isTeacher ? (totalSeats - 1 - i) : i;
-                const desk = createDeskElement(arrangement[dataIdx], dataIdx, showDeskNum, showStudentNum, checkPairDup, i);
+                const desk = createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, i);
                 if (config.mode === 'pair' && i % config.cols % 2 === 1 && i % config.cols !== config.cols - 1) desk.classList.add('desk-pair-gap');
                 grid.appendChild(desk);
             }
@@ -443,7 +441,7 @@
                 desksDiv.style.gridTemplateColumns = groupSize > 3 ? `repeat(2, auto)` : `repeat(${groupSize}, auto)`;
                 for (let j = 0; j < groupSize; j++) {
                     const dataIdx = groupIdx * groupSize + j;
-                    const desk = createDeskElement(arrangement[dataIdx], dataIdx, showDeskNum, showStudentNum, checkPairDup, dataIdx);
+                    const desk = createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, dataIdx);
                     desksDiv.appendChild(desk);
                 }
                 groupBlock.appendChild(desksDiv); grid.appendChild(groupBlock);
@@ -453,11 +451,13 @@
         function handleGroupDragStart(e) { dragSourceType = 'group'; draggedGroupIdx = parseInt(this.dataset.groupIdx); this.classList.add('group-moving'); e.dataTransfer.effectAllowed = 'move'; }
         function handleGroupDrop(e) { e.preventDefault(); if (dragSourceType !== 'group') return; this.classList.remove('group-moving'); const targetGroupIdx = parseInt(this.dataset.groupIdx); const cls = getCurrentClass(); if (draggedGroupIdx !== targetGroupIdx) { const oldIdx = cls.groupOrder.indexOf(draggedGroupIdx); const newIdx = cls.groupOrder.indexOf(targetGroupIdx); [cls.groupOrder[oldIdx], cls.groupOrder[newIdx]] = [cls.groupOrder[newIdx], cls.groupOrder[oldIdx]]; saveData(); renderDesks(cls.arrangement); } }
 
-        function createDeskElement(student, dataIdx, showDeskNum, showStudentNum, checkPairDup, visualIdx) {
+        function createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, visualIdx) {
             const desk = document.createElement('div');
             const cls = getCurrentClass();
+            const student = arrangement[dataIdx];
             const groupMoveMode = document.getElementById('groupMoveModeToggle')?.checked;
             desk.className = `desk ${student ? 'seat-full' : ''} ${student && student.isFixed ? 'seat-fixed' : ''}`;
+            
             if (!groupMoveMode) {
                 desk.draggable = true; desk.onclick = () => toggleFixSeat(dataIdx);
                 desk.addEventListener('dragstart', (e) => { dragSource = desk; dragSourceType = 'desk'; e.dataTransfer.effectAllowed = 'move'; desk.style.opacity = '0.3'; });
@@ -465,18 +465,27 @@
                 desk.addEventListener('dragleave', () => desk.classList.remove('over'));
                 desk.addEventListener('drop', handleDrop);
             } else { desk.draggable = false; }
+
+            // 중복 짝꿍 체크 로직 수정: dataIdx 기준이 아닌 '논리적 그룹' 기준으로 판별
             if (checkPairDup && student && cls.savedPairs) {
                 const step = config.mode === 'pair' ? 2 : config.groupSize;
-                const groupStart = Math.floor(visualIdx / step) * step;
-                const groupEnd = groupStart + step;
-                for(let k=groupStart; k<groupEnd; k++) {
-                    if (k === visualIdx) continue;
-                    const partner = cls.arrangement[k];
+                // dataIdx가 해당 배열에서 몇 번째 그룹에 속하는지 계산
+                const logicalGroupStart = Math.floor(dataIdx / step) * step;
+                const logicalGroupEnd = logicalGroupStart + step;
+                
+                for(let k = logicalGroupStart; k < logicalGroupEnd; k++) {
+                    if (k === dataIdx) continue;
+                    const partner = arrangement[k];
                     if (partner && cls.savedPairs.includes([student.no, partner.no].sort((a,b)=>a-b).join('-'))) {
-                        const badge = document.createElement('span'); badge.className = 'pair-alert'; badge.innerText = '🙌'; desk.appendChild(badge); break;
+                        const badge = document.createElement('span'); 
+                        badge.className = 'pair-alert'; 
+                        badge.innerText = '🙌'; 
+                        desk.appendChild(badge); 
+                        break;
                     }
                 }
             }
+            
             let deskNoHtml = showDeskNum ? `<span class="absolute top-1 left-1.5 text-[9px] text-gray-300 font-normal">${dataIdx + 1}</span>` : '';
             if (student) {
                 let sNoHtml = showStudentNum ? `<span style="font-size: var(--desk-no-size)" class="theme-text opacity-70 leading-none mb-1">${student.no}</span>` : '';
@@ -524,6 +533,7 @@
         function closeSettings() { document.getElementById('settingsModal').classList.replace('flex', 'hidden'); }
         function saveSettings() { config.cols = parseInt(document.getElementById('colCount').value) || 6; config.mode = document.getElementById('layoutMode').value; config.groupSize = parseInt(document.getElementById('groupSizeInput').value) || 4; config.hideSecretMenus = document.getElementById('hideSecretMenusToggle').checked; saveData(); renderDesks(getCurrentClass().arrangement); applySecretMenusVisibility(); toggleGroupSizeInput(config.mode); closeSettings(); }
         function renderDesksByCurrent() { renderDesks(getCurrentClass().arrangement); }
+
         function arrangeSeats() {
             const cls = getCurrentClass(); if (!cls.students.length) return alert('명단을 등록하세요.');
             const step = config.mode === 'pair' ? 2 : (config.mode === 'group' ? config.groupSize : 1);
@@ -552,6 +562,7 @@
         }
         function syncPatternToAll() { const cur = getCurrentClass(); if (!cur.arrangement.length) return alert('배치를 먼저 하세요.'); const pattern = cur.arrangement.map(s => s ? s.no : null); classes.forEach(cls => { if (cls.id !== currentClassId) { cls.arrangement = pattern.map(no => no ? (cls.students.find(s => s.no == no) || null) : null); } }); saveData(); loadClassData(); alert('패턴이 적용되었습니다!'); }
         function setView(v) { config.view = v; document.getElementById('viewBtnStudent').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'student' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; document.getElementById('viewBtnTeacher').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'teacher' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; renderDesks(getCurrentClass().arrangement); }
+
         async function exportResult(type, target) {
             const menu = document.getElementById('exportMenu'); menu.classList.add('hidden');
             const originalId = currentClassId; const printArea = document.getElementById('printArea');
