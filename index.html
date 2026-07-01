@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자리 배치 도우미👩‍🏫</title>
+    <title>자리 배치 도우미 👩‍🏫</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -76,6 +76,7 @@
         .student-item { cursor: grab; transition: background 0.2s; }
         .student-seated { opacity: 0.5; background-color: #f3f4f6; }
         .pair-alert { position: absolute; bottom: -8px; right: -8px; font-size: 16px; z-index: 20; }
+        .avoid-alert { position: absolute; bottom: -8px; left: -8px; font-size: 16px; z-index: 20; }
 
         @media print { 
             .no-print { display: none !important; } 
@@ -141,6 +142,7 @@
                         <label class="flex items-center cursor-pointer"><input type="checkbox" id="orderMode" class="mr-2 theme-accent"> 명단 순서대로 배치</label>
                         <label class="flex items-center cursor-pointer border-t theme-border-light pt-2 mt-2"><input type="checkbox" id="showNumberToggle" onchange="renderDesksByCurrent()" class="mr-2 theme-accent" checked> 책상 위치번호 표시</label>
                         <label class="flex items-center cursor-pointer"><input type="checkbox" id="showStudentNoToggle" onchange="renderDesksByCurrent()" class="mr-2 accent-pink-500" checked> 학생 개인번호 표시</label>
+                        <label class="flex items-center cursor-pointer"><input type="checkbox" id="showLeftHandedToggle" onchange="renderDesksByCurrent()" class="mr-2 accent-pink-500" checked> 왼손잡이 아이콘 표시</label>
                     </div>
 
                     <div id="groupAdjustmentMenu" class="space-y-2 mb-4 bg-orange-50 p-3 rounded-lg text-xs border border-orange-100 hidden">
@@ -200,8 +202,8 @@
 
         <div class="fixed bottom-3 left-4 text-[10px] text-gray-400 no-print font-bold">by. 조니T</div>
 
-        <button onclick="openSettings()" class="settings-btn no-print fixed bottom-4 right-4 bg-white p-3 rounded-full shadow-lg border-2 theme-text hover:scale-110 transition-all z-50">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <button onclick="openSettings()" class="settings-btn no-print fixed bottom-4 right-4 bg-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg border-2 theme-text hover:scale-110 transition-all z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
 
@@ -287,7 +289,7 @@
         // --- 유틸리티 함수 ---
         function getCurrentClass() { return classes.find(c => c.id === currentClassId); }
         function saveData() { localStorage.setItem('seatPro_vFinal_data', JSON.stringify(classes)); localStorage.setItem('seatPro_vFinal_config', JSON.stringify(config)); }
-        function updateAvoidPairs(val) { const cls = getCurrentClass(); cls.avoidPairs = val; saveData(); }
+        function updateAvoidPairs(val) { const cls = getCurrentClass(); cls.avoidPairs = val; saveData(); renderDesksByCurrent(); }
         function getAvoidPairsList() { const val = getCurrentClass().avoidPairs || ""; return val.split(',').map(p => { const n = p.split('-').map(x => x.trim()); return n.length === 2 ? n.sort((a,b)=>a-b).join('-') : null; }).filter(x => x); }
         function updateGroupCols(val) { config.groupCols = parseInt(val) || 3; saveData(); renderDesks(getCurrentClass().arrangement); }
 
@@ -309,7 +311,7 @@
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {header: 1});
                     const students = [];
                     const startIndex = (rows[0] && (rows[0][0] === '번호' || isNaN(rows[0][0]))) ? 1 : 0;
-                    for(let i = startIndex; i < rows.length; i++) { if (rows[i][1]) students.push({ no: rows[i][0] || (i + 1), name: rows[i][1].toString().trim(), isFixed: false }); }
+                    for(let i = startIndex; i < rows.length; i++) { if (rows[i][1]) students.push({ no: rows[i][0] || (i + 1), name: rows[i][1].toString().trim(), isFixed: false, isLeftHanded: false }); }
                     if (students.length > 0) { newClasses.push({ id: Date.now() + Math.random(), name: sheetName, students, arrangement: [], savedPairs: [], avoidPairs: "", groupOrder: [] }); }
                 });
                 if (newClasses.length > 0) {
@@ -324,6 +326,7 @@
         function loadClassData() {
             const cls = getCurrentClass();
             document.getElementById('classNameInput').value = cls.name;
+            document.getElementById('avoidPairsInput').value = cls.avoidPairs || "";
             const listEl = document.getElementById('studentList');
             listEl.innerHTML = cls.students.length ? '' : '<li class="italic text-center text-gray-300 py-10">명단을 추가하세요</li>';
             const seatedNos = cls.arrangement.filter(s => s).map(s => s.no);
@@ -333,10 +336,25 @@
                 li.className = `flex items-center gap-2 group p-1 rounded-lg student-item ${isSeated ? 'student-seated' : 'hover:bg-gray-50'}`;
                 li.draggable = true;
                 li.onmousedown = () => { dragSourceType = 'list'; draggedStudentIdx = i; };
-                li.innerHTML = `<input type="text" value="${s.no}" onchange="updateStudentData(${i}, 'no', this.value)" class="edit-input w-8 text-center text-[10px] text-gray-400 font-bold"><input type="text" value="${s.name}" onchange="updateStudentData(${i}, 'name', this.value)" class="edit-input flex-1 font-medium text-sm"><button onclick="removeStudent(${i})" class="hidden group-hover:block text-red-300 hover:text-red-500 text-sm px-1">×</button>`;
+                
+                // 이름 입력란 너비 지정(w-28) 및 왼손 버튼의 세로 열 정렬 처리 완료
+                li.innerHTML = `<input type="text" value="${s.no}" onchange="updateStudentData(${i}, 'no', this.value)" class="edit-input w-8 text-center text-[10px] text-gray-400 font-bold"><input type="text" value="${s.name}" onchange="updateStudentData(${i}, 'name', this.value)" class="edit-input w-28 font-medium text-sm ml-1"><label class="text-[10px] text-gray-500 flex items-center gap-1 cursor-pointer whitespace-nowrap bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 hover:bg-gray-200 transition-all select-none"><input type="checkbox" ${s.isLeftHanded ? 'checked' : ''} onchange="toggleLeftHanded(${i})" class="accent-pink-500"><span>왼손</span></label><button onclick="removeStudent(${i})" class="hidden group-hover:block text-red-300 hover:text-red-500 text-sm px-1 ml-auto">×</button>`;
                 listEl.appendChild(li);
             });
             renderDesks(cls.arrangement);
+        }
+
+        // --- 왼손잡이 상태 토글 함수 ---
+        function toggleLeftHanded(idx) {
+            const cls = getCurrentClass();
+            cls.students[idx].isLeftHanded = !cls.students[idx].isLeftHanded;
+            cls.arrangement.forEach(s => {
+                if (s && s.no == cls.students[idx].no) {
+                    s.isLeftHanded = cls.students[idx].isLeftHanded;
+                }
+            });
+            saveData();
+            renderDesksByCurrent();
         }
 
         // --- 핵심 렌더링 로직 ---
@@ -400,7 +418,7 @@
             });
         }
 
-        // --- 드래그 앤 드롭 핸들러 ---
+        // --- 드래그 앤 드롭 핸들러 및 요소 생성 ---
         function createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, visualIdx) {
             const desk = document.createElement('div');
             const cls = getCurrentClass();
@@ -441,12 +459,30 @@
                 }
             }
 
+            // 기피 번호 실시간 경고 체크 (수동 배치 대응)
+            const avoidList = getAvoidPairsList();
+            if (student && avoidList.length > 0 && config.mode !== 'exam') {
+                const step = config.mode === 'pair' ? 2 : config.groupSize;
+                const logicalGroupStart = Math.floor(dataIdx / step) * step;
+                const logicalGroupEnd = logicalGroupStart + step;
+                for(let k = logicalGroupStart; k < logicalGroupEnd; k++) {
+                    if (k === dataIdx) continue;
+                    const partner = arrangement[k];
+                    if (partner && avoidList.includes([student.no, partner.no].sort((a,b)=>a-b).join('-'))) {
+                        const badge = document.createElement('span'); badge.className = 'avoid-alert'; badge.innerText = '🚫'; desk.appendChild(badge); break;
+                    }
+                }
+            }
+
             let deskNoHtml = showDeskNum ? `<span class="absolute top-1 left-1.5 text-[9px] text-gray-300 font-normal">${dataIdx + 1}</span>` : '';
+            const showLeftHanded = document.getElementById('showLeftHandedToggle')?.checked;
+            let leftHandedHtml = (showLeftHanded && student && student.isLeftHanded) ? `<span class="absolute bottom-1 left-1.5 text-[10px] text-blue-500 font-bold">✋</span>` : '';
+
             if (student) {
                 let sNoHtml = showStudentNum ? `<span style="font-size: var(--desk-no-size)" class="theme-text opacity-70 leading-none mb-1 text-center">${student.no}</span>` : '';
                 let fixIcon = student.isFixed ? `<span class="absolute top-1 right-1 text-[10px]">📌</span>` : '';
-                desk.innerHTML += `${deskNoHtml}${fixIcon}<div class="flex flex-col items-center justify-center">${sNoHtml}<span style="font-size: var(--desk-name-size)" class="font-bold leading-tight text-center px-1">${student.name}</span></div>`;
-            } else { desk.innerHTML += deskNoHtml; }
+                desk.innerHTML += `${deskNoHtml}${fixIcon}${leftHandedHtml}<div class="flex flex-col items-center justify-center">${sNoHtml}<span style="font-size: var(--desk-name-size)" class="font-bold leading-tight text-center px-1">${student.name}</span></div>`;
+            } else { desk.innerHTML += `${deskNoHtml}${leftHandedHtml}`; }
             return desk;
         }
 
@@ -466,10 +502,8 @@
                 }
             } else if (dragSourceType === 'list') {
                 const studentToPlace = cls.students[draggedStudentIdx];
-                // 기존 위치 찾아서 비우기
                 const existingIdx = cls.arrangement.findIndex(s => s && s.no === studentToPlace.no);
                 if (existingIdx !== -1) cls.arrangement[existingIdx] = null;
-                // 새 위치에 배치
                 cls.arrangement[destIdx] = { ...studentToPlace, isFixed: false };
             }
             
@@ -489,6 +523,73 @@
                 [cls.groupOrder[oldIdx], cls.groupOrder[newIdx]] = [cls.groupOrder[newIdx], cls.groupOrder[oldIdx]];
                 saveData(); renderDesks(cls.arrangement);
             }
+        }
+
+        // --- CSV 저장 및 불러오기 ---
+        function saveToCSV() {
+            const cls = getCurrentClass();
+            if (!cls.arrangement || !cls.arrangement.length) return alert('배치된 데이터가 없습니다.');
+            
+            let csvContent = "\uFEFF책상번호,학생번호,이름,왼손잡이\n";
+            cls.arrangement.forEach((s, idx) => {
+                if (s) {
+                    csvContent += `${idx + 1},${s.no},"${s.name}",${s.isLeftHanded ? "O" : "X"}\n`;
+                } else {
+                    csvContent += `${idx + 1},,,\n`;
+                }
+            });
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `자리배치_${cls.name}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function loadFromCSV(input) {
+            if (!input.files.length) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const text = e.target.result;
+                const lines = text.split("\n");
+                const cls = getCurrentClass();
+                const newArrangement = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const parts = lines[i].split(",");
+                    if (parts.length >= 2) {
+                        const deskIdx = parseInt(parts[0]) - 1;
+                        const studentNo = parts[1] ? parts[1].trim() : "";
+                        let studentName = parts[2] ? parts[2].trim().replace(/^"|"$/g, '') : "";
+                        let isLeft = parts[3] ? parts[3].trim() === "O" : false;
+                        
+                        if (studentNo || studentName) {
+                            let existingStudent = cls.students.find(s => s.no == studentNo);
+                            if (!existingStudent && studentName) {
+                                existingStudent = { no: studentNo, name: studentName, isFixed: false, isLeftHanded: isLeft };
+                                cls.students.push(existingStudent);
+                            } else if (existingStudent) {
+                                existingStudent.isLeftHanded = isLeft;
+                            }
+                            if (existingStudent) {
+                                newArrangement[deskIdx] = { ...existingStudent, isFixed: false };
+                            }
+                        } else {
+                            newArrangement[deskIdx] = null;
+                        }
+                    }
+                }
+                cls.arrangement = newArrangement;
+                saveData();
+                loadClassData();
+                alert('CSV 데이터를 성공적으로 불러왔습니다.');
+                input.value = '';
+            };
+            reader.readAsText(file, "UTF-8");
         }
 
         // --- 기타 기능 및 초기화 ---
@@ -511,7 +612,7 @@
         function addClass() { const nc = { id: Date.now() + Math.random(), name: (classes.length + 1) + '반', students: [], arrangement: [], savedPairs: [], avoidPairs: "", groupOrder: [] }; classes.push(nc); currentClassId = nc.id; saveData(); renderTabs(); loadClassData(); }
         function deleteClass() { if (classes.length > 1 && confirm('현재 반을 삭제하시겠습니까?')) { classes = classes.filter(c => c.id !== currentClassId); currentClassId = classes[0].id; saveData(); renderTabs(); loadClassData(); } }
         function renameClass(v) { getCurrentClass().name = v; saveData(); renderTabs(); }
-        function addStudentManual() { const input = document.getElementById('manualNameInput'); const name = input.value.trim(); if (!name) return; const cls = getCurrentClass(); const no = cls.students.length > 0 ? Math.max(...cls.students.map(s => parseInt(s.no))) + 1 : 1; cls.students.push({ no, name, isFixed: false }); input.value = ''; saveData(); loadClassData(); }
+        function addStudentManual() { const input = document.getElementById('manualNameInput'); const name = input.value.trim(); if (!name) return; const cls = getCurrentClass(); const no = cls.students.length > 0 ? Math.max(...cls.students.map(s => parseInt(s.no))) + 1 : 1; cls.students.push({ no, name, isFixed: false, isLeftHanded: false }); input.value = ''; saveData(); loadClassData(); }
         function removeStudent(idx) { const cls = getCurrentClass(); const student = cls.students[idx]; const arrIdx = cls.arrangement.findIndex(s => s && s.no === student.no); if (arrIdx !== -1) cls.arrangement[arrIdx] = null; cls.students.splice(idx, 1); saveData(); loadClassData(); }
         function toggleFixSeat(idx) { const cls = getCurrentClass(); if (cls.arrangement[idx]) { cls.arrangement[idx].isFixed = !cls.arrangement[idx].isFixed; saveData(); renderDesks(cls.arrangement); } }
         function updateStudentData(idx, f, v) { const cls = getCurrentClass(); cls.students[idx][f] = v; saveData(); renderDesks(cls.arrangement); }
@@ -521,6 +622,7 @@
         function closeSettings() { document.getElementById('settingsModal').classList.replace('flex', 'hidden'); }
         function saveSettings() { config.cols = parseInt(document.getElementById('colCount').value) || 6; config.mode = document.getElementById('layoutMode').value; config.groupSize = parseInt(document.getElementById('groupSizeInput').value) || 4; config.hideSecretMenus = document.getElementById('hideSecretMenusToggle').checked; saveData(); renderDesks(getCurrentClass().arrangement); applySecretMenusVisibility(); toggleGroupSizeInput(config.mode); closeSettings(); }
         function renderDesksByCurrent() { renderDesks(getCurrentClass().arrangement); }
+        function saveCurrentPairs() { const cls = getCurrentClass(); const arr = cls.arrangement; if(!arr.length) return; const step = config.mode === 'pair' ? 2 : (config.mode === 'group' ? config.groupSize : 1); if(step === 1) return alert('짝꿍 또는 모둠 모드에서만 저장이 가능합니다.'); const pairs = []; for(let i=0; i<arr.length; i+=step) { const chunk = arr.slice(i, i+step).filter(s => s); for(let a=0; a<chunk.length; a++) { for(let b=a+1; b<chunk.length; b++) { pairs.push([chunk[a].no, chunk[b].no].sort((x,y)=>x-y).join('-')); } } } cls.savedPairs = pairs; saveData(); renderDesksByCurrent(); alert('현재 배치의 짝꿍 데이터가 기억되었습니다.'); }
         
         function arrangeSeats() {
             const cls = getCurrentClass(); if (!cls.students.length) return alert('명단을 등록하세요.');
