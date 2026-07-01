@@ -11,18 +11,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --t-50: #fff5f7; --t-100: #fce4ec; --t-200: #f8bbd0; --t-400: #f06292; --t-500: #e91e63; --t-600: #d81b60;
             --desk-no-size: 10px;
             --desk-name-size: 14px;
         }
 
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--t-50); min-height: 100vh; overflow-x: hidden; }
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #fff5f7; min-height: 100vh; overflow-x: hidden; }
         .card { background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
         
-        .theme-text { color: var(--t-500); }
-        .theme-bg { background-color: var(--t-500); }
-        .theme-bg-light { background-color: var(--t-50); }
-        .theme-border { border-color: var(--t-500); }
+        .theme-text { color: #e91e63; }
+        .theme-bg { background-color: #e91e63; }
+        .theme-bg-light { background-color: #fff5f7; }
+        .theme-border { border-color: #e91e63; }
 
         .scroll-container { width: 100%; overflow-x: auto; padding: 16px 0; cursor: grab; }
         .scroll-container:active { cursor: grabbing; }
@@ -38,14 +37,14 @@
         }
 
         .desk { 
-            width: 90px; height: 70px; border-radius: 8px; border: 2px solid var(--t-100); 
+            width: 90px; height: 70px; border-radius: 8px; border: 2px solid #fce4ec; 
             background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; 
             position: relative; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             cursor: pointer;
         }
-        .seat-full { border-color: var(--t-400); background-color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .desk.over { border: 2px dashed var(--t-500) !important; transform: scale(1.05); z-index: 10; }
-        .seat-fixed { border: 2.5px solid var(--t-500) !important; background-color: var(--t-50) !important; }
+        .seat-full { border-color: #f06292; background-color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .desk.over { border: 2px dashed #e91e63 !important; transform: scale(1.05); z-index: 10; }
+        .seat-fixed { border: 2.5px solid #e91e63 !important; background-color: #fff5f7 !important; }
 
         #seatGrid { display: grid; gap: 16px; justify-content: center; } 
         
@@ -54,42 +53,70 @@
 
         .group-container { display: grid; gap: 25px; justify-content: center; padding: 10px; }
         .group-block {
-            border: 2px solid var(--t-100); padding: 12px; border-radius: 12px;
+            border: 2px solid #fce4ec; padding: 12px; border-radius: 12px;
             display: flex; flex-direction: column; align-items: center; background: #fafafa;
             transition: all 0.2s; position: relative;
         }
-        .group-moving { opacity: 0.5; transform: scale(1.02); border: 2px dashed var(--t-400); }
-        .group-label { font-size: 11px; font-weight: bold; color: var(--t-400); margin-bottom: 6px; }
+        .group-moving { opacity: 0.5; transform: scale(1.02); border: 2px dashed #f06292; }
+        .group-label { font-size: 11px; font-weight: bold; color: #f06292; margin-bottom: 6px; }
         .group-desks { display: grid; gap: 5px; }
 
         .platform { 
-            width: 180px; height: 40px; background: white; border: 3px solid var(--t-500); 
-            color: var(--t-500); display: flex; align-items: center; justify-content: center; 
+            width: 180px; height: 40px; background: white; border: 3px solid #e91e63; 
+            color: #e91e63; display: flex; align-items: center; justify-content: center; 
             border-radius: 10px; font-weight: bold; margin-bottom: 24px; 
         }
 
-        .tab-active { background-color: var(--t-500) !important; color: white !important; }
+        .tab-active { background-color: #e91e63 !important; color: white !important; }
         .edit-input { border-bottom: 1px solid transparent; transition: all 0.2s; background: transparent; }
-        .edit-input:focus { border-bottom: 1px solid var(--t-400); outline: none; background: white; }
-        .drop-active { border: 2px dashed var(--t-500) !important; background-color: var(--t-50) !important; }
+        .edit-input:focus { border-bottom: 1px solid #f06292; outline: none; background: white; }
+        .drop-active { border: 2px dashed #e91e63 !important; background-color: #fff5f7 !important; }
         
         .student-item { cursor: grab; transition: background 0.2s; }
         .student-seated { opacity: 0.5; background-color: #f3f4f6; }
         .pair-alert { position: absolute; bottom: -8px; right: -8px; font-size: 16px; z-index: 20; }
         .avoid-alert { position: absolute; bottom: -8px; left: -8px; font-size: 16px; z-index: 20; }
 
+        #printBatchContainer { display: none; }
+        body.print-all-active #mainApp { display: none !important; }
+        body.print-all-active #printBatchContainer { display: block !important; }
+
+        /* 인쇄 모드 스타일 구조 리모델링 완료 */
         @media print { 
             .no-print { display: none !important; } 
-            body { background: white; } 
+            body { background: white; overflow: visible !important; padding: 0 !important; margin: 0 !important; } 
             .card { border: none; box-shadow: none; } 
             .scroll-container { overflow: visible; }
             #printArea { padding: 0; border: none; background: none; }
+            
+            .print-page { 
+                display: flex !important; 
+                flex-direction: column !important;
+                justify-content: center !important;
+                align-items: center !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                padding: 40px 20px !important;
+            }
+            
+            /* 수리 핵심: 맨 마지막 반 도면 뒤에는 강제 빈 페이지를 생성하지 않음 */
+            .print-page:not(:last-child) {
+                page-break-after: always !important; 
+                break-after: page !important; 
+            }
+            
+            .batch-card {
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
         }
     </style>
 </head>
 <body class="p-4 md:p-6 pb-12">
 
-    <div class="max-w-full mx-auto">
+    <div id="mainApp" class="max-w-full mx-auto">
         <header class="flex flex-wrap justify-between items-center mb-6 no-print gap-4 px-4">
             <h1 class="text-2xl font-bold theme-text tracking-tighter">🪑 자리 배치 도우미 </h1>
             
@@ -114,7 +141,6 @@
                         <input type="file" id="csvImportInput" class="hidden" accept=".csv" onchange="loadFromCSV(this)">
                         <button onclick="document.getElementById('csvImportInput').click()" class="w-full text-left px-4 py-2 hover:bg-green-50 text-sm border-b text-green-600 font-bold">📤 CSV 불러오기</button>
                         <div class="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-400 border-b">전체 반 일괄</div>
-                        <!-- 일괄 설정 모달을 열도록 수정 -->
                         <button onclick="openPrintModal()" class="w-full text-left px-4 py-2 hover:theme-bg-light text-sm font-bold text-pink-600">📚 전체 일괄 인쇄/PDF</button>
                     </div>
                 </div>
@@ -207,8 +233,6 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
-
-
     <!-- 설정 모달 -->
     <div id="settingsModal" class="modal fixed inset-0 bg-black/40 hidden items-center justify-center z-[200]">
         <div class="bg-white p-8 rounded-2xl w-96 shadow-2xl">
@@ -265,24 +289,14 @@
         </div>
     </div>
 
-    <!-- 신규 추가: 일괄 인쇄 분할 구성 설정 모달 -->
+    <!-- 일괄 인쇄 반 선택 모달 -->
     <div id="printModal" class="modal fixed inset-0 bg-black/40 hidden items-center justify-center z-[200]">
         <div class="bg-white p-6 rounded-2xl w-96 shadow-2xl">
             <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">📚 일괄 인쇄 설정</h3>
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-2">출력할 학반 선택</label>
-                    <div id="printClassList" class="space-y-1.5 max-h-40 overflow-y-auto border rounded-xl p-3 bg-gray-50">
-                        <!-- 반 목록 체크박스가 JS로 생성됨 -->
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">한 페이지당 반 개수</label>
-                    <select id="printLayoutSelect" class="w-full border rounded p-2 text-sm outline-none bg-white">
-                        <option value="1">1개 반씩 독립 배치 (기본)</option>
-                        <option value="2">2개 반씩 상하 배치</option>
-                        <option value="4">4개 반씩 모아 찍기 (2x2 격자)</option>
-                    </select>
+                    <div id="printClassList" class="space-y-1.5 max-h-56 overflow-y-auto border rounded-xl p-3 bg-gray-50"></div>
                 </div>
             </div>
             <div class="mt-6 flex gap-2">
@@ -298,9 +312,8 @@
         let currentClassId = classes[0].id;
         let config = JSON.parse(localStorage.getItem('seatPro_vFinal_config')) || { view: 'student', cols: 6, mode: 'exam', theme: 'pink', noSize: 10, nameSize: 14, groupSize: 4, groupCols: 3, hideSecretMenus: false };
         
-        // 드래그 전역 변수
         let dragSourceObj = null;
-        let dragSourceType = 'desk'; // 'desk', 'list', 'group'
+        let dragSourceType = 'desk';
         let draggedStudentIdx = null;
         let draggedGroupIdx = null;
 
@@ -315,14 +328,12 @@
 
         window.onload = () => { initTheme(); renderTabs(); loadClassData(); initFileUpload(); };
 
-        // --- 유틸리티 함수 ---
         function getCurrentClass() { return classes.find(c => c.id === currentClassId); }
         function saveData() { localStorage.setItem('seatPro_vFinal_data', JSON.stringify(classes)); localStorage.setItem('seatPro_vFinal_config', JSON.stringify(config)); }
         function updateAvoidPairs(val) { const cls = getCurrentClass(); cls.avoidPairs = val; saveData(); renderDesksByCurrent(); }
         function getAvoidPairsList() { const val = getCurrentClass().avoidPairs || ""; return val.split(',').map(p => { const n = p.split('-').map(x => x.trim()); return n.length === 2 ? n.sort((a,b)=>a-b).join('-') : null; }).filter(x => x); }
         function updateGroupCols(val) { config.groupCols = parseInt(val) || 3; saveData(); renderDesks(getCurrentClass().arrangement); }
 
-        // --- 명단 및 파일 처리 ---
         function initFileUpload() {
             const dz = document.getElementById('dropZone');
             dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drop-active'); });
@@ -365,7 +376,6 @@
                 li.className = `flex items-center gap-2 group p-1 rounded-lg student-item ${isSeated ? 'student-seated' : 'hover:bg-gray-50'}`;
                 li.draggable = true;
                 li.onmousedown = () => { dragSourceType = 'list'; draggedStudentIdx = i; };
-                
                 li.innerHTML = `<input type="text" value="${s.no}" onchange="updateStudentData(${i}, 'no', this.value)" class="edit-input w-8 text-center text-[10px] text-gray-400 font-bold"><input type="text" value="${s.name}" onchange="updateStudentData(${i}, 'name', this.value)" class="edit-input w-28 font-medium text-sm ml-1"><label class="text-[10px] text-gray-500 flex items-center gap-1 cursor-pointer whitespace-nowrap bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 hover:bg-gray-200 transition-all select-none"><input type="checkbox" ${s.isLeftHanded ? 'checked' : ''} onchange="toggleLeftHanded(${i})" class="accent-pink-500"><span>왼손</span></label><button onclick="removeStudent(${i})" class="hidden group-hover:block text-red-300 hover:text-red-500 text-sm px-1 ml-auto">×</button>`;
                 listEl.appendChild(li);
             });
@@ -376,15 +386,11 @@
             const cls = getCurrentClass();
             cls.students[idx].isLeftHanded = !cls.students[idx].isLeftHanded;
             cls.arrangement.forEach(s => {
-                if (s && s.no == cls.students[idx].no) {
-                    s.isLeftHanded = cls.students[idx].isLeftHanded;
-                }
+                if (s && s.no == cls.students[idx].no) s.isLeftHanded = cls.students[idx].isLeftHanded;
             });
-            saveData();
-            renderDesksByCurrent();
+            saveData(); renderDesksByCurrent();
         }
 
-        // --- 핵심 렌더링 로직 ---
         function renderDesks(arrangement = []) {
             const grid = document.getElementById('seatGrid');
             const showDeskNum = document.getElementById('showNumberToggle').checked;
@@ -463,10 +469,7 @@
                     e.dataTransfer.effectAllowed = 'move'; 
                     desk.style.opacity = '0.3'; 
                 });
-                desk.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    desk.classList.add('over');
-                });
+                desk.addEventListener('dragover', (e) => { e.preventDefault(); desk.classList.add('over'); });
                 desk.addEventListener('dragleave', () => desk.classList.remove('over'));
                 desk.addEventListener('drop', handleDrop);
             }
@@ -520,9 +523,7 @@
                 if (dragSourceObj) {
                     dragSourceObj.style.opacity = '1';
                     const srcIdx = parseInt(dragSourceObj.dataset.index);
-                    if (srcIdx !== destIdx) {
-                        [cls.arrangement[srcIdx], cls.arrangement[destIdx]] = [cls.arrangement[destIdx], cls.arrangement[srcIdx]];
-                    }
+                    if (srcIdx !== destIdx) [cls.arrangement[srcIdx], cls.arrangement[destIdx]] = [cls.arrangement[destIdx], cls.arrangement[srcIdx]];
                 }
             } else if (dragSourceType === 'list') {
                 const studentToPlace = cls.students[draggedStudentIdx];
@@ -530,9 +531,7 @@
                 if (existingIdx !== -1) cls.arrangement[existingIdx] = null;
                 cls.arrangement[destIdx] = { ...studentToPlace, isFixed: false };
             }
-            
-            saveData();
-            loadClassData();
+            saveData(); loadClassData();
         }
 
         function handleGroupDrop(e) {
@@ -549,20 +548,14 @@
             }
         }
 
-        // --- CSV 저장 및 불러오기 ---
         function saveToCSV() {
             const cls = getCurrentClass();
             if (!cls.arrangement || !cls.arrangement.length) return alert('배치된 데이터가 없습니다.');
-            
             let csvContent = "\uFEFF책상번호,학생번호,이름,왼손잡이\n";
             cls.arrangement.forEach((s, idx) => {
-                if (s) {
-                    csvContent += `${idx + 1},${s.no},"${s.name}",${s.isLeftHanded ? "O" : "X"}\n`;
-                } else {
-                    csvContent += `${idx + 1},,,\n`;
-                }
+                if (s) csvContent += `${idx + 1},${s.no},"${s.name}",${s.isLeftHanded ? "O" : "X"}\n`;
+                else csvContent += `${idx + 1},,,\n`;
             });
-            
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -581,7 +574,6 @@
                 const lines = text.split("\n");
                 const cls = getCurrentClass();
                 const newArrangement = [];
-                
                 for (let i = 1; i < lines.length; i++) {
                     if (!lines[i].trim()) continue;
                     const parts = lines[i].split(",");
@@ -590,7 +582,6 @@
                         const studentNo = parts[1] ? parts[1].trim() : "";
                         let studentName = parts[2] ? parts[2].trim().replace(/^"|"$/g, '') : "";
                         let isLeft = parts[3] ? parts[3].trim() === "O" : false;
-                        
                         if (studentNo || studentName) {
                             let existingStudent = cls.students.find(s => s.no == studentNo);
                             if (!existingStudent && studentName) {
@@ -599,24 +590,20 @@
                             } else if (existingStudent) {
                                 existingStudent.isLeftHanded = isLeft;
                             }
-                            if (existingStudent) {
-                                newArrangement[deskIdx] = { ...existingStudent, isFixed: false };
-                            }
+                            if (existingStudent) newArrangement[deskIdx] = { ...existingStudent, isFixed: false };
                         } else {
                             newArrangement[deskIdx] = null;
                         }
                     }
                 }
                 cls.arrangement = newArrangement;
-                saveData();
-                loadClassData();
+                saveData(); loadClassData();
                 alert('CSV 데이터를 성공적으로 불러왔습니다.');
                 input.value = '';
             };
             reader.readAsText(file, "UTF-8");
         }
 
-        // --- 기타 기능 및 초기화 ---
         function initTheme() {
             updateThemeVars(config.theme); updateFontSize('no', config.noSize); updateFontSize('name', config.nameSize);
             document.getElementById('themeSelect').value = config.theme;
@@ -625,8 +612,7 @@
             document.getElementById('groupSizeInput').value = config.groupSize || 4;
             document.getElementById('groupColInput').value = config.groupCols || 3;
             document.getElementById('hideSecretMenusToggle').checked = config.hideSecretMenus;
-            toggleGroupSizeInput(config.mode);
-            applySecretMenusVisibility();
+            toggleGroupSizeInput(config.mode); applySecretMenusVisibility();
         }
         function applySecretMenusVisibility() { document.getElementById('secretMenusGroup').style.display = config.hideSecretMenus ? 'none' : 'block'; }
         function updateThemeVars(theme) { const colors = colorThemes[theme]; const root = document.documentElement; Object.keys(colors).forEach(k => root.style.setProperty(`--t-${k}`, colors[k])); config.theme = theme; }
@@ -678,31 +664,25 @@
         function syncPatternToAll() { const cur = getCurrentClass(); if (!cur.arrangement.length) return alert('배치를 먼저 하세요.'); const pattern = cur.arrangement.map(s => s ? s.no : null); classes.forEach(cls => { if (cls.id !== currentClassId) { cls.arrangement = pattern.map(no => no ? (cls.students.find(s => s.no == no) || null) : null); } }); saveData(); loadClassData(); alert('패턴이 적용되었습니다!'); }
         function setView(v) { config.view = v; document.getElementById('viewBtnStudent').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'student' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; document.getElementById('viewBtnTeacher').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'teacher' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; renderDesks(getCurrentClass().arrangement); }
 
-        // --- 신규 일괄 인쇄 팝업 제어 스크립트 ---
         function openPrintModal() {
             document.getElementById('exportMenu').classList.add('hidden');
             const listContainer = document.getElementById('printClassList');
             listContainer.innerHTML = '';
-            
             classes.forEach(cls => {
                 const label = document.createElement('label');
                 label.className = 'flex items-center cursor-pointer text-xs font-bold text-gray-700 p-1 hover:bg-gray-200 rounded transition-colors select-none';
                 label.innerHTML = `<input type="checkbox" value="${cls.id}" checked class="mr-2 accent-pink-500 print-class-checkbox"><span>${cls.name}</span>`;
                 listContainer.appendChild(label);
             });
-            
             document.getElementById('printModal').classList.replace('hidden', 'flex');
         }
 
-        function closePrintModal() {
-            document.getElementById('printModal').classList.replace('flex', 'hidden');
-        }
+        function closePrintModal() { document.getElementById('printModal').classList.replace('flex', 'hidden'); }
 
         function executeBatchPrint() {
             const checkedBoxes = document.querySelectorAll('.print-class-checkbox:checked');
             if (checkedBoxes.length === 0) return alert('출력할 반을 하나 이상 선택해주세요.');
             
-            const layoutVal = parseInt(document.getElementById('printLayoutSelect').value);
             const targetClassIds = Array.from(checkedBoxes).map(cb => cb.value);
             const targetClasses = classes.filter(cls => targetClassIds.includes(String(cls.id)));
             
@@ -710,40 +690,20 @@
             const originalId = currentClassId;
             const printArea = document.getElementById('printArea');
             
-            // 인쇄용 독립 임시 공간 생성
-            const tempDiv = document.createElement('div');
-            tempDiv.className = 'fixed inset-0 bg-white z-[9999] overflow-auto p-4 m-0 flex flex-col items-center';
+            document.body.classList.add('print-all-active');
             
-            let currentPageWrapper = null;
-            let currentGridContainer = null;
-            let itemInPageCount = 0;
+            const batchContainer = document.createElement('div');
+            batchContainer.id = 'printBatchContainer';
             
             targetClasses.forEach((cls) => {
-                // 새로운 페이지 생성 제어
-                if (itemInPageCount === 0) {
-                    currentPageWrapper = document.createElement('div');
-                    currentPageWrapper.className = 'w-full flex flex-col items-center justify-start print-page-container';
-                    currentPageWrapper.style.pageBreakAfter = 'always';
-                    
-                    if (layoutVal === 2) {
-                        currentGridContainer = document.createElement('div');
-                        currentGridContainer.className = 'grid grid-cols-1 gap-12 w-full justify-center justify-items-center p-4';
-                        currentPageWrapper.appendChild(currentGridContainer);
-                    } else if (layoutVal === 4) {
-                        currentGridContainer = document.createElement('div');
-                        currentGridContainer.className = 'grid grid-cols-2 gap-6 w-full justify-center justify-items-center p-4 transform scale-90 origin-top';
-                        currentPageWrapper.appendChild(currentGridContainer);
-                    }
-                    tempDiv.appendChild(currentPageWrapper);
-                }
+                const pageWrapper = document.createElement('div');
+                pageWrapper.className = 'print-page';
                 
-                // 가상 렌더링으로 각 반 도면 데이터 추출
                 currentClassId = cls.id;
                 renderDesks(cls.arrangement);
                 
-                // 도면 카드 래핑 및 타이틀 추가
                 const cardWrapper = document.createElement('div');
-                cardWrapper.className = 'flex flex-col items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm';
+                cardWrapper.className = 'batch-card flex flex-col items-center bg-white justify-center';
                 
                 const titleEl = document.createElement('div');
                 titleEl.className = 'text-center font-bold text-base mb-2 text-gray-800';
@@ -755,43 +715,34 @@
                 if (guide) guide.remove();
                 cardWrapper.appendChild(clone);
                 
-                // 선택한 모아찍기 레이아웃 규칙에 따라 요소 배분
-                if (layoutVal === 1) {
-                    cardWrapper.className += ' my-8';
-                    currentPageWrapper.appendChild(cardWrapper);
-                } else {
-                    currentGridContainer.appendChild(cardWrapper);
-                }
-                
-                itemInPageCount++;
-                if (itemInPageCount === layoutVal) {
-                    itemInPageCount = 0; 
-                }
+                pageWrapper.appendChild(cardWrapper);
+                batchContainer.appendChild(pageWrapper);
             });
             
-            document.body.appendChild(tempDiv);
-            window.print();
-            document.body.removeChild(tempDiv);
+            document.body.appendChild(batchContainer);
             
-            // 기존 보기 복구
-            currentClassId = originalId;
-            renderTabs();
-            loadClassData();
+            setTimeout(() => {
+                window.print();
+                document.body.removeChild(batchContainer);
+                document.body.classList.remove('print-all-active');
+                
+                currentClassId = originalId;
+                renderTabs(); loadClassData();
+            }, 150);
         }
 
-        // --- 단일 인쇄 및 이미지 내보내기 ---
         async function exportResult(type, target) {
             const menu = document.getElementById('exportMenu'); menu.classList.add('hidden');
             const printArea = document.getElementById('printArea');
-            if (target === 'current') {
-                if (type === 'print') window.print(); 
-                else { const canvas = await html2canvas(printArea, { scale: 2 }); const a = document.createElement('a'); a.download = `자리배치_${getCurrentClass().name}.png`; a.href = canvas.toDataURL(); a.click(); }
+            if (target === 'current' && type === 'print') window.print();
+            if (target === 'current' && type === 'png') {
+                const canvas = await html2canvas(printArea, { scale: 2 });
+                const a = document.createElement('a');
+                a.download = `자리배치_${getCurrentClass().name}.png`;
+                a.href = canvas.toDataURL(); a.click();
             }
         }
-        
-        window.onclick = (e) => { 
-            if (!e.target.closest('.relative') && !e.target.closest('#exportMenu')) document.getElementById('exportMenu').classList.add('hidden'); 
-        };
+        window.onclick = (e) => { if (!e.target.closest('.relative') && !e.target.closest('#exportMenu')) document.getElementById('exportMenu').classList.add('hidden'); };
     </script>
 </body>
 </html>
