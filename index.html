@@ -114,7 +114,8 @@
                         <input type="file" id="csvImportInput" class="hidden" accept=".csv" onchange="loadFromCSV(this)">
                         <button onclick="document.getElementById('csvImportInput').click()" class="w-full text-left px-4 py-2 hover:bg-green-50 text-sm border-b text-green-600 font-bold">📤 CSV 불러오기</button>
                         <div class="px-3 py-1 bg-gray-50 text-[10px] font-bold text-gray-400 border-b">전체 반 일괄</div>
-                        <button onclick="exportResult('print', 'all')" class="w-full text-left px-4 py-2 hover:theme-bg-light text-sm font-bold text-pink-600">📚 전체 일괄 인쇄/PDF</button>
+                        <!-- 일괄 설정 모달을 열도록 수정 -->
+                        <button onclick="openPrintModal()" class="w-full text-left px-4 py-2 hover:theme-bg-light text-sm font-bold text-pink-600">📚 전체 일괄 인쇄/PDF</button>
                     </div>
                 </div>
             </div>
@@ -202,10 +203,11 @@
 
         <div class="fixed bottom-3 left-4 text-[10px] text-gray-400 no-print font-bold">by. 조니T</div>
 
-        <button onclick="openSettings()" class="settings-btn no-print fixed bottom-4 right-4 bg-white w-12 h-12 flex items-center justify-center rounded-full shadow-lg border-2 theme-text hover:scale-110 transition-all z-50">
-            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <button onclick="openSettings()" class="settings-btn no-print fixed bottom-4 right-4 bg-white p-3 rounded-full shadow-lg border-2 theme-text hover:scale-110 transition-all z-50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
     </div>
+
 
     <!-- 설정 모달 -->
     <div id="settingsModal" class="modal fixed inset-0 bg-black/40 hidden items-center justify-center z-[200]">
@@ -259,6 +261,33 @@
             <div class="mt-8 flex gap-2">
                 <button onclick="saveSettings()" class="flex-1 theme-bg text-white py-2 rounded-lg font-bold shadow-lg opacity-90">적용</button>
                 <button onclick="closeSettings()" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 신규 추가: 일괄 인쇄 분할 구성 설정 모달 -->
+    <div id="printModal" class="modal fixed inset-0 bg-black/40 hidden items-center justify-center z-[200]">
+        <div class="bg-white p-6 rounded-2xl w-96 shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">📚 일괄 인쇄 설정</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-2">출력할 학반 선택</label>
+                    <div id="printClassList" class="space-y-1.5 max-h-40 overflow-y-auto border rounded-xl p-3 bg-gray-50">
+                        <!-- 반 목록 체크박스가 JS로 생성됨 -->
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">한 페이지당 반 개수</label>
+                    <select id="printLayoutSelect" class="w-full border rounded p-2 text-sm outline-none bg-white">
+                        <option value="1">1개 반씩 독립 배치 (기본)</option>
+                        <option value="2">2개 반씩 상하 배치</option>
+                        <option value="4">4개 반씩 모아 찍기 (2x2 격자)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 flex gap-2">
+                <button onclick="executeBatchPrint()" class="flex-1 theme-bg text-white py-2 rounded-lg font-bold shadow-lg opacity-90">인쇄하기</button>
+                <button onclick="closePrintModal()" class="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg text-sm">취소</button>
             </div>
         </div>
     </div>
@@ -337,14 +366,12 @@
                 li.draggable = true;
                 li.onmousedown = () => { dragSourceType = 'list'; draggedStudentIdx = i; };
                 
-                // 이름 입력란 너비 지정(w-28) 및 왼손 버튼의 세로 열 정렬 처리 완료
                 li.innerHTML = `<input type="text" value="${s.no}" onchange="updateStudentData(${i}, 'no', this.value)" class="edit-input w-8 text-center text-[10px] text-gray-400 font-bold"><input type="text" value="${s.name}" onchange="updateStudentData(${i}, 'name', this.value)" class="edit-input w-28 font-medium text-sm ml-1"><label class="text-[10px] text-gray-500 flex items-center gap-1 cursor-pointer whitespace-nowrap bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 hover:bg-gray-200 transition-all select-none"><input type="checkbox" ${s.isLeftHanded ? 'checked' : ''} onchange="toggleLeftHanded(${i})" class="accent-pink-500"><span>왼손</span></label><button onclick="removeStudent(${i})" class="hidden group-hover:block text-red-300 hover:text-red-500 text-sm px-1 ml-auto">×</button>`;
                 listEl.appendChild(li);
             });
             renderDesks(cls.arrangement);
         }
 
-        // --- 왼손잡이 상태 토글 함수 ---
         function toggleLeftHanded(idx) {
             const cls = getCurrentClass();
             cls.students[idx].isLeftHanded = !cls.students[idx].isLeftHanded;
@@ -418,7 +445,6 @@
             });
         }
 
-        // --- 드래그 앤 드롭 핸들러 및 요소 생성 ---
         function createDeskElement(arrangement, dataIdx, showDeskNum, showStudentNum, checkPairDup, visualIdx) {
             const desk = document.createElement('div');
             const cls = getCurrentClass();
@@ -445,7 +471,6 @@
                 desk.addEventListener('drop', handleDrop);
             }
 
-            // 중복 짝꿍 체크 (데이터 인덱스 기준)
             if (checkPairDup && student && cls.savedPairs) {
                 const step = config.mode === 'pair' ? 2 : config.groupSize;
                 const logicalGroupStart = Math.floor(dataIdx / step) * step;
@@ -459,7 +484,6 @@
                 }
             }
 
-            // 기피 번호 실시간 경고 체크 (수동 배치 대응)
             const avoidList = getAvoidPairsList();
             if (student && avoidList.length > 0 && config.mode !== 'exam') {
                 const step = config.mode === 'pair' ? 2 : config.groupSize;
@@ -654,22 +678,120 @@
         function syncPatternToAll() { const cur = getCurrentClass(); if (!cur.arrangement.length) return alert('배치를 먼저 하세요.'); const pattern = cur.arrangement.map(s => s ? s.no : null); classes.forEach(cls => { if (cls.id !== currentClassId) { cls.arrangement = pattern.map(no => no ? (cls.students.find(s => s.no == no) || null) : null); } }); saveData(); loadClassData(); alert('패턴이 적용되었습니다!'); }
         function setView(v) { config.view = v; document.getElementById('viewBtnStudent').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'student' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; document.getElementById('viewBtnTeacher').className = `px-4 py-1 rounded-lg text-sm font-bold ${v === 'teacher' ? 'tab-active' : 'bg-gray-100 text-gray-400'}`; renderDesks(getCurrentClass().arrangement); }
 
+        // --- 신규 일괄 인쇄 팝업 제어 스크립트 ---
+        function openPrintModal() {
+            document.getElementById('exportMenu').classList.add('hidden');
+            const listContainer = document.getElementById('printClassList');
+            listContainer.innerHTML = '';
+            
+            classes.forEach(cls => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center cursor-pointer text-xs font-bold text-gray-700 p-1 hover:bg-gray-200 rounded transition-colors select-none';
+                label.innerHTML = `<input type="checkbox" value="${cls.id}" checked class="mr-2 accent-pink-500 print-class-checkbox"><span>${cls.name}</span>`;
+                listContainer.appendChild(label);
+            });
+            
+            document.getElementById('printModal').classList.replace('hidden', 'flex');
+        }
+
+        function closePrintModal() {
+            document.getElementById('printModal').classList.replace('flex', 'hidden');
+        }
+
+        function executeBatchPrint() {
+            const checkedBoxes = document.querySelectorAll('.print-class-checkbox:checked');
+            if (checkedBoxes.length === 0) return alert('출력할 반을 하나 이상 선택해주세요.');
+            
+            const layoutVal = parseInt(document.getElementById('printLayoutSelect').value);
+            const targetClassIds = Array.from(checkedBoxes).map(cb => cb.value);
+            const targetClasses = classes.filter(cls => targetClassIds.includes(String(cls.id)));
+            
+            closePrintModal();
+            const originalId = currentClassId;
+            const printArea = document.getElementById('printArea');
+            
+            // 인쇄용 독립 임시 공간 생성
+            const tempDiv = document.createElement('div');
+            tempDiv.className = 'fixed inset-0 bg-white z-[9999] overflow-auto p-4 m-0 flex flex-col items-center';
+            
+            let currentPageWrapper = null;
+            let currentGridContainer = null;
+            let itemInPageCount = 0;
+            
+            targetClasses.forEach((cls) => {
+                // 새로운 페이지 생성 제어
+                if (itemInPageCount === 0) {
+                    currentPageWrapper = document.createElement('div');
+                    currentPageWrapper.className = 'w-full flex flex-col items-center justify-start print-page-container';
+                    currentPageWrapper.style.pageBreakAfter = 'always';
+                    
+                    if (layoutVal === 2) {
+                        currentGridContainer = document.createElement('div');
+                        currentGridContainer.className = 'grid grid-cols-1 gap-12 w-full justify-center justify-items-center p-4';
+                        currentPageWrapper.appendChild(currentGridContainer);
+                    } else if (layoutVal === 4) {
+                        currentGridContainer = document.createElement('div');
+                        currentGridContainer.className = 'grid grid-cols-2 gap-6 w-full justify-center justify-items-center p-4 transform scale-90 origin-top';
+                        currentPageWrapper.appendChild(currentGridContainer);
+                    }
+                    tempDiv.appendChild(currentPageWrapper);
+                }
+                
+                // 가상 렌더링으로 각 반 도면 데이터 추출
+                currentClassId = cls.id;
+                renderDesks(cls.arrangement);
+                
+                // 도면 카드 래핑 및 타이틀 추가
+                const cardWrapper = document.createElement('div');
+                cardWrapper.className = 'flex flex-col items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm';
+                
+                const titleEl = document.createElement('div');
+                titleEl.className = 'text-center font-bold text-base mb-2 text-gray-800';
+                titleEl.innerText = `[ ${cls.name} 자리 배치도 ]`;
+                cardWrapper.appendChild(titleEl);
+                
+                const clone = printArea.cloneNode(true);
+                const guide = clone.querySelector('.no-print');
+                if (guide) guide.remove();
+                cardWrapper.appendChild(clone);
+                
+                // 선택한 모아찍기 레이아웃 규칙에 따라 요소 배분
+                if (layoutVal === 1) {
+                    cardWrapper.className += ' my-8';
+                    currentPageWrapper.appendChild(cardWrapper);
+                } else {
+                    currentGridContainer.appendChild(cardWrapper);
+                }
+                
+                itemInPageCount++;
+                if (itemInPageCount === layoutVal) {
+                    itemInPageCount = 0; 
+                }
+            });
+            
+            document.body.appendChild(tempDiv);
+            window.print();
+            document.body.removeChild(tempDiv);
+            
+            // 기존 보기 복구
+            currentClassId = originalId;
+            renderTabs();
+            loadClassData();
+        }
+
+        // --- 단일 인쇄 및 이미지 내보내기 ---
         async function exportResult(type, target) {
             const menu = document.getElementById('exportMenu'); menu.classList.add('hidden');
-            const originalId = currentClassId; const printArea = document.getElementById('printArea');
+            const printArea = document.getElementById('printArea');
             if (target === 'current') {
                 if (type === 'print') window.print(); 
                 else { const canvas = await html2canvas(printArea, { scale: 2 }); const a = document.createElement('a'); a.download = `자리배치_${getCurrentClass().name}.png`; a.href = canvas.toDataURL(); a.click(); }
-            } else if (target === 'all') {
-                if (type === 'print') {
-                    const tempDiv = document.createElement('div'); tempDiv.className = 'fixed inset-0 bg-white z-[9999] overflow-auto p-0 m-0';
-                    for (const cls of classes) { currentClassId = cls.id; renderDesks(cls.arrangement); const clone = printArea.cloneNode(true); clone.style.pageBreakAfter = 'always'; clone.style.marginBottom = '50px'; const guide = clone.querySelector('.no-print'); if (guide) guide.remove(); tempDiv.appendChild(clone); }
-                    document.body.appendChild(tempDiv); window.print(); document.body.removeChild(tempDiv);
-                    currentClassId = originalId; renderTabs(); loadClassData();
-                }
             }
         }
-        window.onclick = (e) => { if (!e.target.closest('.relative') && !e.target.closest('#exportMenu')) document.getElementById('exportMenu').classList.add('hidden'); };
+        
+        window.onclick = (e) => { 
+            if (!e.target.closest('.relative') && !e.target.closest('#exportMenu')) document.getElementById('exportMenu').classList.add('hidden'); 
+        };
     </script>
 </body>
 </html>
